@@ -142,6 +142,13 @@ h3 { font-size: 16px; font-weight: 700; }
   box-shadow: inset 0 0 0 1px var(--line), var(--shadow-sm);
   border-radius: var(--radius); padding: 18px 18px 19px; margin-bottom: 14px;
 }
+/* 궁합 마무리 정리 — 축별 설명 패널들과 구분되게 바탕을 한 톤 눌러 둔다.
+   '결론'이라는 걸 색이 아니라 명도 차이로 알린다 */
+.summary-panel {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  margin-top: 4px;
+}
 .plain-list { margin: 0; padding-left: 18px; }
 .plain-list li { margin-bottom: 6px; line-height: 1.5; }
 .plain-list li:last-child { margin-bottom: 0; }

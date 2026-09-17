@@ -59,7 +59,7 @@ export default function Compatibility({ initialA, onClose }) {
     )
   }
 
-  const { results, sameCount } = compareTypes(typeA, typeB)
+  const { results, sameCount, summary } = compareTypes(typeA, typeB)
 
   return (
     <div className="sheet-bg" onClick={onClose}>
@@ -85,6 +85,13 @@ export default function Compatibility({ initialA, onClose }) {
             <p style={{ margin: 0 }}>{r.text}</p>
           </div>
         ))}
+
+        <div className="panel summary-panel">
+          <div className="eyebrow" style={{ marginBottom: 9 }}>이런 조합이에요</div>
+          {summary.sharedLine && <p style={{ margin: '0 0 8px' }}>{summary.sharedLine}</p>}
+          {summary.diffLine && <p style={{ margin: '0 0 8px' }}>{summary.diffLine}</p>}
+          <p style={{ margin: 0 }}>{summary.closing}</p>
+        </div>
 
         <p className="small muted" style={{ margin: '4px 0 18px' }}>
           "좋은 궁합·나쁜 궁합" 판정이 아니라, 서로 어떤 점에서 비슷하고 다른지 참고하는 용도입니다.
