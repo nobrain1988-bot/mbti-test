@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { LIKERT } from '../lib/questions.js'
+import { playMark } from '../lib/sound.js'
 
 // 예전엔 한 문항씩 넘기는 방식이었다. 문항 수가 최대 100개까지 늘어나면서
 // "한 개 누르고 다음, 또 누르고 다음"이 지치는 반복이 됐고, 이전 답을 고치기도
@@ -11,7 +12,10 @@ export default function Quiz({ items, onDone }) {
   const answeredCount = Object.keys(answers).length
   const allAnswered = answeredCount === items.length
 
-  const select = (id, value) => setAnswers((a) => ({ ...a, [id]: value }))
+  const select = (id, value) => {
+    playMark()
+    setAnswers((a) => ({ ...a, [id]: value }))
+  }
 
   return (
     <div className="screen">

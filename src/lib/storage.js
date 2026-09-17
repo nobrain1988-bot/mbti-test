@@ -38,7 +38,7 @@ export function addHistory(entry) {
 
 export const clearHistory = () => write(K.history, [])
 
-const SETTINGS_DEFAULT = {}
+const SETTINGS_DEFAULT = { sound: true }
 export function getSettings() {
   const s = read(K.settings, null)
   return s && typeof s === 'object' ? { ...SETTINGS_DEFAULT, ...s } : { ...SETTINGS_DEFAULT }

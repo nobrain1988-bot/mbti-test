@@ -3,6 +3,7 @@ import { questionsFor } from './lib/questions.js'
 import { computeResult } from './lib/scoring.js'
 import { TYPES } from './lib/types.js'
 import { initAds, showBanner, showInterstitialOnExit } from './lib/ads.js'
+import { setSoundEnabled, playResult } from './lib/sound.js'
 import * as store from './lib/storage.js'
 import Intro from './components/Intro.jsx'
 import Quiz from './components/Quiz.jsx'
@@ -45,6 +46,7 @@ function TestView({ onFinished, onOpenCompat }) {
     const items = questionsFor(track)
     const r = computeResult(answers, items)
     store.addHistory({ code: r.code, track, axes: r.axes })
+    playResult()
     setResult(r)
     setPhase('result')
     onFinished()
@@ -121,7 +123,10 @@ export default function App() {
   const [compatSeed, setCompatSeed] = useState(undefined) // undefined = 닫힘, null|code = 열림(초기값)
   const [dataVersion, setDataVersion] = useState(0)
 
-  useEffect(() => { initAds() }, [])
+  useEffect(() => {
+    initAds()
+    setSoundEnabled(store.getSettings().sound !== false)
+  }, [])
   // 배너는 시작 화면을 지난 뒤부터 띄운다 — 시작 화면 하단은 '시작하기' 버튼 자리다.
   useEffect(() => { if (entered) showBanner() }, [entered])
 
