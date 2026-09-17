@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+  <radialGradient id="bg" cx="50%" cy="42%" r="72%">
+    <stop offset="0%"   stop-color="#1c1e33"/>
+    <stop offset="100%" stop-color="#0f1115"/>
+  </radialGradient></defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  
+    <linearGradient id="accent" x1="204.8" y1="204.8" x2="819.2" y2="819.2"
+                    gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#8f93c4"/>
+      <stop offset="55%"  stop-color="#6b6fa8"/>
+      <stop offset="100%" stop-color="#3a3f72"/>
+    </linearGradient>
+    <rect x="204.80" y="204.80" width="281.60" height="281.60" rx="73.22" fill="url(#accent)"/>
+    <rect x="537.60" y="204.80" width="281.60" height="281.60" rx="73.22" fill="url(#accent)"/>
+    <rect x="204.80" y="537.60" width="281.60" height="281.60" rx="73.22" fill="url(#accent)"/>
+    <rect x="537.60" y="537.60" width="281.60" height="281.60" rx="73.22" fill="url(#accent)"/>
+</svg>

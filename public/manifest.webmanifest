@@ -1,0 +1,16 @@
+{
+  "name": "초정밀 MBTI 검사",
+  "short_name": "MBTI",
+  "description": "칼 융의 심리유형론에 기반한 초정밀 성격유형 검사. 간단 검사(48문항)와 정밀 검사(100문항) 중 선택.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f6f4",
+  "theme_color": "#f6f6f4",
+  "icons": [
+    { "src": "pwa-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "pwa-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "pwa-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

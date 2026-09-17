@@ -1,0 +1,313 @@
+/* MBTI — 흰 종이 + 검은 글씨.
+   실제 시험지·설문지에 가까운 톤으로 간다. 어두운 배경에 포인트 색을 칠한
+   '앱 느낌'을 걷어내고, 흑백 위주 + 최소한의 색만 남긴다 — 색이 신뢰를
+   만드는 게 아니라 절제된 타이포와 여백이 신뢰를 만든다. */
+
+:root {
+  --bg:        #f6f6f4;   /* 페이지 배경 — 순백보다 살짝 따뜻한 종이톤 */
+  --bg-2:      #ffffff;
+  --surface:   #ffffff;   /* 카드 */
+  --surface-2: #eeefec;   /* 살짝 올라온/선택된 표면 */
+  --surface-3: #e5e6e2;
+  --ink:       #16181c;   /* '마킹' 색 — 검정. 버튼·선택 상태·수치 강조에 쓴다 */
+  --ink-2:     #000000;
+  --ink-soft:  #53565d;
+  --ink-ink:   #ffffff;   /* 검정 배경 위에 올라가는 글자색 */
+  --text:      #16181c;
+  --text-dim:  #4a4d54;
+  --muted:     #82858c;
+  --line:      #dcddd8;
+  --line-strong: #b7b9b4;
+  --line-soft: rgba(0,0,0,.06);
+  --ad-banner-h: 0px;
+
+  /* 브랜드 포인트 컬러 — 로고마크·시작화면에만 쓰는 절제된 색.
+     원래 민트(#6ee7c8)였는데 너무 튀는 파스텔이라 'AI가 뚝딱 만든 앱' 느낌이
+     난다는 피드백을 받고, 채도를 낮춘 딥 인디고로 바꿨다 — 절제되고 무게감
+     있는 톤이 "정밀 검사 리포트" 컨셉에 더 잘 맞는다. */
+  --accent:      #3a3f72;
+  --accent-2:    #6b6fa8;
+  --accent-deep: #242540;
+
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 20px;
+  --sans: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --shadow-sm: 0 1px 3px rgba(20,20,15,.06), 0 1px 2px rgba(20,20,15,.05);
+  --shadow-md: 0 8px 20px rgba(20,20,15,.08);
+  --shadow-lg: 0 16px 36px rgba(20,20,15,.12);
+  --shadow-accent: 0 8px 18px -6px rgba(0,0,0,.35);
+
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  font-feature-settings: 'tnum' 1;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+/* ── 레이아웃 ────────────────────────────────────────────── */
+.app { min-height: 100%; display: flex; flex-direction: column; max-width: 520px; margin: 0 auto; background: var(--bg); }
+
+.screen {
+  flex: 1;
+  padding: calc(env(safe-area-inset-top, 0px) + 20px) 22px 24px;
+  padding-bottom: calc(80px + var(--ad-banner-h) + env(safe-area-inset-bottom, 0px));
+  animation: fade .25s ease;
+}
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ── 타이포 ──────────────────────────────────────────────── */
+h1, h2, h3 { font-family: var(--sans); font-weight: 700; letter-spacing: -.02em; margin: 0; color: var(--text); }
+h1 { font-size: 25px; line-height: 1.32; padding-right: 46px; font-weight: 800; }
+h2 { font-size: 19px; font-weight: 700; }
+h3 { font-size: 16px; font-weight: 700; }
+
+.eyebrow {
+  font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted); font-weight: 600; margin-bottom: 9px;
+}
+.eyebrow.accent { color: var(--ink); font-weight: 700; }
+/* 한글 제목 아래 붙는 작은 영문 캡션 — 국내 프리미엄 브랜드들이 많이 쓰는 방식.
+   내용을 새로 번역하는 게 아니라, 이미 있는 한국어 문구 옆에 짧은 영문을 더해
+   국제적인 도구라는 인상을 준다. */
+.caption-en {
+  font-size: 12px; letter-spacing: .04em; color: var(--muted);
+  font-style: italic; margin: 0 0 18px;
+}
+.muted { color: var(--muted); }
+.small { font-size: 13.5px; line-height: 1.55; }
+.center { text-align: center; }
+.row { display: flex; align-items: center; gap: 10px; }
+.between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.link { background: none; border: 0; padding: 0; cursor: pointer; color: var(--ink); font-size: 13.5px; font-weight: 700; font-family: var(--sans); }
+.link.row { display: inline-flex; }
+
+/* ── 버튼 ────────────────────────────────────────────────── */
+.btn {
+  display: block; width: 100%; border: 0; cursor: pointer;
+  font-family: var(--sans); font-size: 15.5px; font-weight: 700;
+  padding: 16px 18px; border-radius: var(--radius-sm);
+  background: var(--ink); color: var(--ink-ink); letter-spacing: -.005em;
+  box-shadow: var(--shadow-accent);
+  transition: transform .12s ease, filter .12s ease, box-shadow .15s ease;
+}
+.btn:active { transform: scale(.978); filter: brightness(1.15); box-shadow: 0 4px 10px -4px rgba(0,0,0,.35); }
+.btn.ghost {
+  background: var(--surface); color: var(--text);
+  box-shadow: inset 0 0 0 1.5px var(--line-strong);
+  font-weight: 600;
+}
+.btn.ghost:active { background: var(--surface-2); }
+.btn:disabled { opacity: 1; cursor: default; box-shadow: none; background: var(--surface-2); color: var(--muted); }
+.btn.row { display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+/* ── 목록 타일 ───────────────────────────────────────────── */
+.tile {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  text-align: left; border: 0; cursor: pointer;
+  background: var(--surface); color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--line), var(--shadow-sm);
+  border-radius: var(--radius); padding: 16px 17px; margin-bottom: 12px;
+  transition: transform .12s ease, box-shadow .15s ease;
+}
+.tile:active { transform: scale(.985); }
+.tile .t-icon {
+  width: 42px; height: 42px; flex: 0 0 42px;
+  display: grid; place-items: center; border-radius: 12px;
+  background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line);
+  font-weight: 800; color: var(--ink); font-size: 13px;
+}
+.tile .t-title { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+.tier-tag {
+  font-size: 9.5px; letter-spacing: .08em; font-weight: 700; color: var(--muted);
+  border: 1px solid var(--line-strong); border-radius: 999px; padding: 2px 7px;
+}
+.tile .t-sub { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-top: 4px; }
+
+/* ── 패널 ────────────────────────────────────────────────── */
+.panel {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line), var(--shadow-sm);
+  border-radius: var(--radius); padding: 18px 18px 19px; margin-bottom: 14px;
+}
+.plain-list { margin: 0; padding-left: 18px; }
+.plain-list li { margin-bottom: 6px; line-height: 1.5; }
+.plain-list li:last-child { margin-bottom: 0; }
+
+/* ── 진행바 ──────────────────────────────────────────────── */
+.progress-track { height: 6px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 999px; background: var(--ink); transition: width .3s cubic-bezier(.3,.7,.4,1); }
+.q-text { font-size: 20px; line-height: 1.45; font-weight: 700; letter-spacing: -.01em; margin: 0 0 28px; }
+
+/* ── 시험지 형태의 검사 화면 ─────────────────────────────────
+   문항을 한 개씩 넘기지 않고, 실제 시험지·OMR 답안지처럼 전부 스크롤로
+   훑으며 채운다. 동그라미는 일부러 채워 넣는(마킹) 모양으로 그렸다 —
+   한국 사용자에게 가장 익숙한 '시험 보는' 시각 언어라 설명이 필요 없다. */
+.paper-sticky {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--bg);
+  margin: calc(-1 * (env(safe-area-inset-top, 0px) + 20px)) -22px 20px;
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 22px 14px;
+  box-shadow: 0 1px 0 var(--line);
+}
+.paper-progress-text { font-size: 13px; font-weight: 700; color: var(--text); }
+.paper-progress-text::after { content: ''; }
+
+.paper-list { margin: 0; }
+.paper-q {
+  padding: 22px 0 24px;
+  border-bottom: 1px solid var(--line);
+}
+.paper-q:first-child { padding-top: 4px; }
+.paper-qtext { font-size: 16.5px; line-height: 1.55; font-weight: 600; letter-spacing: -.005em; margin: 0 0 18px; color: var(--text); }
+.paper-qnum { color: var(--muted); font-weight: 700; margin-right: 6px; }
+
+.likert-row { display: flex; justify-content: space-between; gap: 8px; }
+.likert-dot-btn {
+  flex: 1 1 0; max-width: 52px; aspect-ratio: 1; border-radius: 50%;
+  border: 0; cursor: pointer; font-family: var(--sans);
+  background: var(--surface); color: var(--text-dim);
+  box-shadow: inset 0 0 0 1.5px var(--line-strong);
+  font-size: 15px; font-weight: 700;
+  display: grid; place-items: center; margin: 0 auto;
+  transition: transform .12s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
+}
+.likert-dot-btn:active { transform: scale(.92); }
+.likert-dot-btn.on {
+  background: var(--ink); color: var(--ink-ink);
+  box-shadow: none; transform: scale(1.08);
+}
+.likert-ends { margin-top: 9px; }
+.likert-ends span { max-width: 42%; line-height: 1.4; font-size: 12px; }
+.likert-ends span:last-child { text-align: right; }
+
+/* ── 결과: 축 퍼센트 바 ──────────────────────────────────── */
+.axis-row { margin-bottom: 17px; }
+.axis-row:last-child { margin-bottom: 0; }
+.axis-label { margin-bottom: 7px; }
+.axis-bar {
+  position: relative; height: 36px; border-radius: 10px;
+  background: var(--surface-2); overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.axis-fill {
+  position: absolute; inset: 0; width: 0%;
+  background: var(--ink);
+  transition: width .5s cubic-bezier(.3,.7,.4,1);
+}
+.axis-tag { position: absolute; top: 50%; transform: translateY(-50%); font-size: 12.5px; font-weight: 800; letter-spacing: .02em; }
+.axis-tag.left { left: 13px; color: var(--ink-ink); }
+.axis-tag.right { right: 13px; color: var(--text-dim); }
+/* 막대가 글자보다 좁을 때 — 글자를 막대 밖으로 내보내므로 바탕색이 뒤집힌다 */
+.axis-tag.left.out { color: var(--text-dim); }
+.axis-tag.right.out { color: var(--ink-ink); }
+
+/* ── 유형사전 그리드 ─────────────────────────────────────── */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.grid-item { border: 0; background: none; padding: 0; cursor: pointer; min-width: 0; }
+.type-tile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line), var(--shadow-sm);
+  border-radius: var(--radius); padding: 19px 6px; gap: 6px;
+  transition: transform .12s ease;
+}
+.type-tile:active { transform: scale(.96); }
+.type-tile.on { background: var(--ink); box-shadow: none; }
+.type-tile.on .type-code, .type-tile.on .cap { color: var(--ink-ink); }
+.type-code { font-size: 15px; font-weight: 800; letter-spacing: .03em; color: var(--ink); }
+.type-code-lg { font-size: 15px; font-weight: 800; letter-spacing: .14em; color: var(--ink); text-transform: uppercase; margin-bottom: 9px; }
+.grid-item .cap { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.35; text-align: center; }
+
+/* ── 모달 시트 ───────────────────────────────────────────── */
+.sheet-bg {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(20,20,18,.45); backdrop-filter: blur(2px);
+  display: flex; align-items: flex-end; justify-content: center;
+  animation: fade .2s ease;
+}
+.sheet {
+  width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto;
+  background: var(--bg-2);
+  box-shadow: 0 -16px 44px rgba(0,0,0,.18);
+  border-radius: 22px 22px 0 0;
+  padding: 10px 22px calc(28px + env(safe-area-inset-bottom, 0px));
+  animation: slideup .3s cubic-bezier(.2,.8,.25,1);
+}
+@keyframes slideup { from { transform: translateY(100%); } to { transform: none; } }
+.sheet-grip { width: 38px; height: 4px; border-radius: 999px; background: var(--line-strong); margin: 8px auto 18px; }
+
+/* ── 하단 탭바 ───────────────────────────────────────────── */
+.tabbar {
+  position: fixed; left: 0; right: 0;
+  bottom: calc(var(--ad-banner-h) + env(safe-area-inset-bottom, 0px));
+  display: flex; justify-content: center;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 -1px 0 var(--line);
+  padding: 8px 10px;
+  z-index: 40;
+}
+.tabbar-inner { display: flex; width: 100%; max-width: 520px; gap: 4px; }
+.tab {
+  flex: 1; border: 0; background: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 7px 2px; margin: 0 2px; border-radius: 14px;
+  color: var(--muted);
+  font-size: 10.5px; letter-spacing: .01em; font-weight: 600; font-family: var(--sans);
+  transition: color .15s ease, background .15s ease;
+}
+.tab.on { color: var(--ink); background: var(--surface-2); font-weight: 700; }
+.tab svg { width: 21px; height: 21px; }
+
+/* ── 설정 버튼 (우상단 고정) ─────────────────────────────── */
+.gear {
+  position: fixed; z-index: 30;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  right: max(16px, calc(50vw - 260px + 16px));
+  width: 38px; height: 38px; border: 0; cursor: pointer;
+  display: grid; place-items: center; border-radius: 50%;
+  background: var(--surface); box-shadow: inset 0 0 0 1px var(--line), var(--shadow-sm);
+  color: var(--muted); font-size: 16px;
+  transition: color .15s ease, transform .12s ease;
+}
+.gear:active { transform: scale(.92); color: var(--ink); }
+
+/* ── 시작 화면 ───────────────────────────────────────────── */
+.intro {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
+  padding: 28px;
+  animation: fade .35s ease;
+}
+.intro-inner { max-width: 420px; }
+.intro-illustration { display: block; width: 100%; max-width: 230px; height: auto; margin: 0 0 2px -10px; }
+.intro-inner h1 { padding-right: 0; font-size: 29px; margin-bottom: 15px; }
+/* 로고마크만 브랜드색을 남긴다 — 흑백 화면 전체에서 유일한 색 포인트 */
+.intro-mark {
+  width: 46px; height: 46px; border-radius: 13px; margin-bottom: 22px;
+  background: linear-gradient(165deg, var(--accent-2), var(--accent));
+  box-shadow: 0 10px 22px -8px rgba(58,63,114,.5);
+  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+  gap: 4px; padding: 8px;
+}
+.intro-mark span { background: rgba(18,18,40,.45); border-radius: 4px; }
+.intro-inner .eyebrow.accent { color: var(--accent); }
+
+/* 움직임을 줄여달라고 설정한 사용자 */
+@media (prefers-reduced-motion: reduce) {
+  .screen, .intro, .sheet, .sheet-bg { animation-duration: .01ms !important; animation-delay: 0s !important; }
+}

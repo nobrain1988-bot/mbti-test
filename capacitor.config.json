@@ -1,0 +1,8 @@
+{
+  "appId": "com.obok.mbti",
+  "appName": "MBTI",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#f6f6f4"
+  }
+}

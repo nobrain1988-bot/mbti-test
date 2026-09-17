@@ -1,0 +1,61 @@
+name: Android APK 빌드 (테스트용)
+
+# main 에 푸시될 때마다 안드로이드 APK 를 자동으로 만든다(클라우드 빌드).
+# 완성된 APK 는 이 워크플로우 실행 페이지의 Artifacts 에서 내려받아 폰에 설치한다.
+# 이건 '내 폰에서 확인용'이다. 구글 플레이에 올리는 파일은 android-release.yml 이 만든다.
+#
+# 이 APK 에는 VITE_ADS 가 없으므로 항상 '구글 테스트 광고'가 나간다.
+# 실광고가 붙은 APK 를 직접 눌러보면 자기 광고 클릭이 되어 애드몹 계정이 정지된다.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v5
+
+      - name: Node 설치
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 웹 빌드 (Vite → dist)
+        run: npm run build
+
+      - name: Java(JDK 21) 설치
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Capacitor 동기화 (dist → android)
+        run: npx cap sync android
+
+      - name: 앱 서명 고정 (디버그 키스토어 캐시)
+        # 매 빌드마다 서명이 바뀌면 폰에서 기존 앱을 지우고 새로 깔아야 한다.
+        # 키스토어를 캐시에 고정해 첫 빌드의 서명을 계속 재사용 → 이후엔 덮어쓰기(업데이트)만 하면 된다.
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: mbti-debug-keystore-v1
+
+      - name: 디버그 APK 빌드
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: APK 업로드 (Artifacts)
+        uses: actions/upload-artifact@v5
+        with:
+          name: mbti-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
