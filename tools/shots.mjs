@@ -95,6 +95,18 @@ async function answer(page, pattern, from, to) {
   }, pattern, from, to)
 }
 
+// 시트 안의 16유형 그리드에서 특정 유형을 고른다
+async function pickType(page, code) {
+  const ok = await page.evaluate((c) => {
+    const el = [...document.querySelectorAll('.sheet .type-tile')]
+      .find((x) => x.querySelector('.type-code')?.textContent.trim() === c)
+    if (!el) return false
+    el.click()
+    return true
+  }, code)
+  if (!ok) throw new Error(`${code} 타일을 못 찾았습니다`)
+}
+
 async function shot(page, n, name) {
   const file = join(OUT, `${String(n).padStart(2, '0')}-${name}.png`)
   await page.screenshot({ path: file })
@@ -153,7 +165,17 @@ try {
   await page.waitForSelector('.type-tile')
   await shot(page, 5, 'library')
 
-  console.log('\n끝. store/screenshots/ 에 5장.')
+  // 6. 궁합 보기 — "MBTI 궁합" 은 검색량이 큰 단어다. 설명에 적는 것보다 보여주는 게 낫다.
+  //    결과 스크린샷이 INFJ 라서 INFJ × ENFP 로 이어지게 골랐다.
+  await clickText(page, '.tile', '궁합')
+  await wait(500)
+  await pickType(page, 'INFJ')
+  await wait(350)
+  await pickType(page, 'ENFP')
+  await wait(500)
+  await shot(page, 6, 'compatibility')
+
+  console.log('\n끝. store/screenshots/ 에 6장.')
 } finally {
   await browser.close()
 }
