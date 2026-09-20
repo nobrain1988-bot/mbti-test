@@ -1,8 +1,8 @@
 import puppeteer from 'puppeteer-core'
 
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe'
-// 개발 서버(5177)가 기본. 미리보기 서버로 돌리려면 VERIFY_URL 로 지정한다.
-const URL = process.env.VERIFY_URL || 'http://localhost:5177/'
+// 개발 서버(vite.config.js 의 5181)가 기본. 미리보기 서버로 돌리려면 VERIFY_URL 로 지정한다.
+const URL = process.env.VERIFY_URL || 'http://localhost:5181/'
 const CODES = ['ISTJ','ISFJ','INFJ','INTJ','ISTP','ISFP','INFP','INTP','ESTP','ESFP','ENFP','ENTP','ESTJ','ESFJ','ENTJ','ENFJ']
 const AXIS_POLES = [['E','I'],['S','N'],['T','F'],['J','P']]
 
