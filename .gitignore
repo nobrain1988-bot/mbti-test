@@ -10,3 +10,7 @@ android/local.properties
 .env.local
 .DS_Store
 .cache
+
+# 애드몹/파이어베이스 설정 파일 — 넣게 되면 키가 들어있으므로 커밋 금지
+google-services.json
+android/app/google-services.json

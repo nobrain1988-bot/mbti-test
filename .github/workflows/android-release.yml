@@ -6,13 +6,27 @@ name: Android AAB (플레이 업로드용)
 #    그래서 캐시에만 두지 않고, 깃허브 Secret 에 넣어 영구 보관한다.
 #    (캐시는 7일간 안 쓰면 삭제된다 → 다음 빌드 때 다른 키가 생겨 플레이가 업로드를 거부한다)
 #
-# 처음 한 번만 하는 절차:
-#   1) 이 워크플로를 그냥 실행한다 → 키가 자동 생성되고 Artifacts 에 올라온다
-#   2) mbti-upload-keystore-DO-NOT-LOSE 를 내려받아 따로 백업한다
-#   3) 로그에 찍힌 base64 문자열을 복사해 Secret 에 MBTI_KEYSTORE_BASE64 로 저장한다
-#   4) 이후부터는 매번 그 Secret 에서 같은 키를 복원해 쓴다
+# 🔥 공개 저장소에서 키를 만들면 안 된다
+#   공개 저장소는 **Actions 로그와 아티팩트를 누구나 열람·다운로드**할 수 있다.
+#   키를 만드는 실행은 base64 를 로그에 찍고 .jks 를 아티팩트로 올리므로,
+#   공개 상태에서 그 실행을 하면 앱 서명키가 전 세계에 공개된다.
+#   (타로 저장소에서 실제로 이 일이 났다 — 2026-09-23 확인)
+#
+# 처음 한 번만 하는 절차 — 순서를 지킬 것:
+#   1) 저장소를 **비공개(Private)** 로 둔 상태에서
+#   2) 이 워크플로를 `generate_keystore = true` 로 실행한다
+#   3) mbti-upload-keystore-DO-NOT-LOSE 를 내려받아 PC 에 따로 백업한다
+#   4) 로그의 base64 를 복사해 Secret 에 MBTI_KEYSTORE_BASE64 로 저장한다
+#   5) **그 실행 기록을 삭제한다** (Actions → 해당 run → ··· → Delete workflow run)
+#   6) 그제서야 저장소를 공개로 바꾸고 깃허브 페이지를 켠다
+#   7) 이후 빌드는 generate_keystore 를 끈 채로 돌린다 — Secret 에서 키를 복원해 쓴다
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      generate_keystore:
+        description: '업로드 키를 새로 만든다 (최초 1회, 반드시 비공개 저장소에서)'
+        type: boolean
+        default: false
 
 jobs:
   build-aab:
@@ -75,6 +89,14 @@ jobs:
             echo "$UPLOAD_KEYSTORE_BASE64" | base64 -d > "$MBTI_KEYSTORE_PATH"
             echo "Secret 에서 업로드 키 복원 완료"
             echo "created=false" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.generate_keystore }}" != "true" ]; then
+            # 키도 없고 만들라고 하지도 않았다 → 여기서 멈춘다.
+            # 그냥 만들어버리면 공개 저장소에서 키가 노출될 수 있다.
+            echo "::error::업로드 키가 없습니다 (Secret MBTI_KEYSTORE_BASE64 없음)."
+            echo "키를 새로 만들려면 저장소를 **비공개로 돌린 뒤** 이 워크플로를"
+            echo "generate_keystore = true 로 실행하세요. 공개 저장소에서 만들면"
+            echo "Actions 로그와 아티팩트를 통해 서명키가 전 세계에 공개됩니다."
+            exit 1
           else
             keytool -genkeypair -v -keystore "$MBTI_KEYSTORE_PATH" \
               -alias "$MBTI_KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 \
@@ -84,7 +106,7 @@ jobs:
             echo "created=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: 🔴 새 키를 만들었다면 — 이 값을 Secret 에 저장할 것
+      - name: 🔴 새 키를 만들었다면 — 이 값을 Secret 에 저장하고 이 실행 기록을 지울 것
         if: steps.keystore.outputs.created == 'true'
         run: |
           echo "=============================================================="
@@ -92,6 +114,10 @@ jobs:
           echo " Settings → Secrets → Actions → New repository secret 에"
           echo "   이름: MBTI_KEYSTORE_BASE64"
           echo " 로 저장하세요. 저장 전에는 이 앱을 업데이트할 수 없습니다."
+          echo ""
+          echo " ⚠️ 저장하고 아티팩트를 내려받은 뒤에는 **이 실행 기록을 삭제**하세요."
+          echo "    (Actions → 이 run → 오른쪽 ··· → Delete workflow run)"
+          echo "    저장소를 공개로 바꾸면 이 로그와 아티팩트도 같이 공개됩니다."
           echo "=============================================================="
           base64 -w0 "$MBTI_KEYSTORE_PATH"
           echo ""
@@ -126,3 +152,6 @@ jobs:
           name: mbti-upload-keystore-DO-NOT-LOSE
           path: /home/runner/.mbti/upload-keystore.jks
           if-no-files-found: error
+          # 서명키가 깃허브에 오래 남아 있을 이유가 없다. 하루 안에 내려받고,
+          # 내려받았으면 실행 기록째로 지운다. (기본값 90일은 너무 길다)
+          retention-days: 1

@@ -54,14 +54,15 @@ export default function TypeContent({ code }) {
 
       {t.speculated?.length > 0 && (
         <div className="panel">
-          <div className="eyebrow">이 유형일 거라 널리 언급되는 인물</div>
+          <div className="eyebrow">이 유형이라고 전해지는 인물</div>
           <ul className="plain-list">
             {t.speculated.map((f) => (
               <li key={f.name}>{f.name}<span className="muted"> — {f.note}</span></li>
             ))}
           </ul>
           <p className="small muted" style={{ margin: '10px 0 0' }}>
-            본인이 밝힌 게 아니라 성격유형 분석가·팬 커뮤니티의 추측입니다. 확인된 사실이 아닙니다.
+            본인이 밝힌 게 아니라 언론 보도나 성격유형 분석가들 사이에서 전해지는 이야기입니다.
+            확인된 사실이 아닙니다.
           </p>
         </div>
       )}

@@ -62,7 +62,7 @@ try {
         const relPanel = panels.find(p => p.textContent.includes('관계에서'))
         const workPanel = panels.find(p => p.textContent.includes('일할 때'))
         const famousPanel = panels.find(p => p.textContent.includes('이 유형이라고 밝힌'))
-        const specPanel = panels.find(p => p.textContent.includes('널리 언급되는'))
+        const specPanel = panels.find(p => p.textContent.includes('전해지는 인물'))
         return {
           shownCode: codeEl?.textContent?.trim(),
           nickname: h2?.textContent?.trim(),
@@ -90,4 +90,8 @@ try {
 console.log(JSON.stringify(results, null, 2))
 const failed = results.filter(r => !r.pass)
 console.log(`\n${results.length - failed.length}/${results.length} PASS`)
-if (failed.length) console.log('FAILED:', failed.map(f => f.target).join(', '))
+if (failed.length) {
+  console.log('FAILED:', failed.map(f => f.target).join(', '))
+  // 종료코드를 남겨야 CI 나 `&&` 로 이어 붙였을 때 실패가 실패로 전달된다.
+  process.exit(1)
+}

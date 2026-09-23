@@ -1,6 +1,6 @@
 {
   "appId": "com.obok.mbti",
-  "appName": "MBTI",
+  "appName": "MBTI성격유형검사",
   "webDir": "dist",
   "android": {
     "backgroundColor": "#f6f6f4"
