@@ -313,7 +313,7 @@ h3 { font-size: 16px; font-weight: 700; }
 @keyframes introIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes introOut { to { opacity: 0; transform: scale(1.04); } }
 .intro-inner { max-width: 420px; }
-.intro-illustration { display: block; width: 100%; max-width: 230px; height: auto; margin: 0 0 2px -10px; }
+.intro-illustration { display: block; width: 100%; max-width: 300px; height: auto; margin: 0 0 10px -6px; }
 .intro-inner h1 { padding-right: 0; font-size: 29px; margin-bottom: 15px; }
 /* 로고마크만 브랜드색을 남긴다 — 흑백 화면 전체에서 유일한 색 포인트 */
 .intro-mark {

@@ -13,35 +13,10 @@ export default function Intro({ onEnter }) {
   return (
     <div className={`intro${leaving ? ' leaving' : ''}`}>
       <div className="intro-inner">
-        <svg className="intro-illustration" viewBox="0 0 300 190" aria-hidden="true">
-          <defs>
-            <filter id="intro-blur" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="22" />
-            </filter>
-          </defs>
-          {/* 은은한 배경 광원 하나만 남기고, 실제 도형은 4개 축을 뜻하는
-              나침반/레이더 모양으로 정밀하게 그렸다 — 흐릿한 파스텔 뭉치보다
-              "정밀 검사" 컨셉에 맞는 계기판 느낌을 준다. */}
-          <circle cx="150" cy="95" r="70" fill="#8f93c4" opacity="0.35" filter="url(#intro-blur)" />
-          <g stroke="#3a3f72" strokeWidth="1.3" fill="none" opacity="0.8">
-            <circle cx="150" cy="95" r="68" opacity="0.3" />
-            <line x1="150" y1="27" x2="150" y2="163" />
-            <line x1="82" y1="95" x2="218" y2="95" />
-            <line x1="102" y1="47" x2="198" y2="143" />
-            <line x1="198" y1="47" x2="102" y2="143" />
-          </g>
-          <g fill="#454a7d">
-            <circle cx="150" cy="27" r="4" />
-            <circle cx="150" cy="163" r="4" />
-            <circle cx="82" cy="95" r="4" />
-            <circle cx="218" cy="95" r="4" />
-            <circle cx="102" cy="47" r="3" />
-            <circle cx="198" cy="143" r="3" />
-            <circle cx="198" cy="47" r="3" />
-            <circle cx="102" cy="143" r="3" />
-          </g>
-          <circle cx="150" cy="95" r="5.5" fill="#242540" />
-        </svg>
+        {/* 시작 화면에 온기를 주려고 넣은 캐릭터 3인. 특정 유형을 가리키지 않는다 —
+            16유형 중 셋만 그리면 "얘는 무슨 유형이냐"가 되고, 실존 인물을 닮게
+            그리면 초상권 문제가 된다. 성격이 저마다 다르다는 느낌만 준다. */}
+        <img className="intro-illustration" src="./types/trio.webp" alt="" aria-hidden="true" />
         <div className="intro-mark"><span /><span /><span /><span /></div>
         <div className="eyebrow accent">MBTI</div>
         <h1 style={{ margin: '6px 0 4px' }}>초정밀<br />성격유형 검사</h1>
