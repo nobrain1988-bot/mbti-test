@@ -17,7 +17,17 @@ export default function Intro({ onEnter }) {
             16유형 중 셋만 그리면 "얘는 무슨 유형이냐"가 되고, 실존 인물을 닮게
             그리면 초상권 문제가 된다. 성격이 저마다 다르다는 느낌만 준다. */}
         <img className="intro-illustration" src="./types/trio.webp" alt="" aria-hidden="true" />
-        <div className="intro-mark"><span /><span /><span /><span /></div>
+        {/* 4가지 축을 레고 블록처럼. 장식이면서 동시에 이 검사가 무엇을 재는지
+            한 줄로 보여준다 — 글자는 코드로 그리므로 틀릴 일이 없다. */}
+        <div className="axis-blocks" aria-hidden="true">
+          {[['E', 'I'], ['S', 'N'], ['T', 'F'], ['J', 'P']].map(([a, b]) => (
+            <span className="axis-pair" key={a}>
+              <span className="axis-block">{a}</span>
+              <span className="axis-block alt">{b}</span>
+            </span>
+          ))}
+        </div>
+
         <div className="eyebrow accent">MBTI</div>
         <h1 style={{ margin: '6px 0 4px' }}>초정밀<br />성격유형 검사</h1>
         <p className="caption-en">Personality Assessment Report</p>

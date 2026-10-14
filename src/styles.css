@@ -315,15 +315,27 @@ h3 { font-size: 16px; font-weight: 700; }
 .intro-inner { max-width: 420px; }
 .intro-illustration { display: block; width: 100%; max-width: 300px; height: auto; margin: 0 0 10px -6px; }
 .intro-inner h1 { padding-right: 0; font-size: 29px; margin-bottom: 15px; }
-/* 로고마크만 브랜드색을 남긴다 — 흑백 화면 전체에서 유일한 색 포인트 */
-.intro-mark {
-  width: 46px; height: 46px; border-radius: 13px; margin-bottom: 22px;
-  background: linear-gradient(165deg, var(--accent-2), var(--accent));
-  box-shadow: 0 10px 22px -8px rgba(58,63,114,.5);
-  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
-  gap: 4px; padding: 8px;
+
+/* 4가지 축 블록 — 캐릭터와 같은 장난감 느낌을 글자로 이어간다.
+   그림으로 만들지 않은 이유: 이미지 생성 모델은 특정 글자를 정확히 그리지 못한다.
+   코드로 그리면 글자가 틀릴 일이 없고 용량도 들지 않는다. */
+.axis-blocks { display: flex; gap: 11px; margin: 0 0 20px; }
+.axis-pair { display: flex; gap: 3px; }
+.axis-block {
+  width: 29px; height: 29px; border-radius: 9px;
+  display: grid; place-items: center;
+  font-size: 13px; font-weight: 800; letter-spacing: .02em;
+  color: #fbfbfd;
+  background: linear-gradient(158deg, #7a7eb4 0%, #4a4f85 58%, #3a3f72 100%);
+  box-shadow: 0 3px 6px -2px rgba(36, 37, 64, .42), inset 0 1px 0 rgba(255,255,255,.28);
+  transform: rotate(-3deg);
 }
-.intro-mark span { background: rgba(18,18,40,.45); border-radius: 4px; }
+/* 한 쌍 안에서 반대쪽은 조금 밝게 + 반대로 기울여 둘이 한 묶음으로 읽히게 */
+.axis-block.alt {
+  background: linear-gradient(158deg, #a9adda 0%, #7d81b8 60%, #666ba0 100%);
+  transform: rotate(3deg);
+}
+
 .intro-inner .eyebrow.accent { color: var(--accent); }
 
 /* 움직임을 줄여달라고 설정한 사용자 */
