@@ -1,6 +1,17 @@
+import { useState } from 'react'
+
 export default function Intro({ onEnter }) {
+  // 그냥 사라지면 화면이 '툭' 끊긴다. 빠지는 연출을 먼저 보여주고 그다음에 넘긴다.
+  // 시간은 styles.css 의 introOut 길이와 맞춰야 중간에 깜빡이지 않는다.
+  const [leaving, setLeaving] = useState(false)
+  const start = () => {
+    if (leaving) return // 연속으로 눌러도 한 번만
+    setLeaving(true)
+    setTimeout(onEnter, 300)
+  }
+
   return (
-    <div className="intro">
+    <div className={`intro${leaving ? ' leaving' : ''}`}>
       <div className="intro-inner">
         <svg className="intro-illustration" viewBox="0 0 300 190" aria-hidden="true">
           <defs>
@@ -35,15 +46,11 @@ export default function Intro({ onEnter }) {
         <div className="eyebrow accent">MBTI</div>
         <h1 style={{ margin: '6px 0 4px' }}>초정밀<br />성격유형 검사</h1>
         <p className="caption-en">Personality Assessment Report</p>
-        <p className="small muted" style={{ margin: '0 0 6px' }}>
+        <p className="small muted" style={{ margin: '0 0 28px' }}>
           칼 융의 심리유형론에서 갈라져 나온 4가지 축(에너지 방향·정보 처리·결정 기준·생활양식)을
           바탕으로 만든 검사입니다.
         </p>
-        <p className="small muted" style={{ margin: '0 0 28px' }}>
-          다만 성격은 딱 16개로 자르기엔 훨씬 다면적입니다. 결과는 자기이해를 돕는
-          참고 도구로 봐주세요 — 의학적 진단이 아닙니다.
-        </p>
-        <button className="btn" onClick={onEnter}>시작하기</button>
+        <button className="btn" onClick={start}>시작하기</button>
       </div>
     </div>
   )
