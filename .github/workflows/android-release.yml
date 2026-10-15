@@ -83,13 +83,18 @@ jobs:
           MBTI_KEYSTORE_PASSWORD: ${{ secrets.MBTI_KEYSTORE_PASSWORD }}
           MBTI_KEY_PASSWORD: ${{ secrets.MBTI_KEYSTORE_PASSWORD }}
           UPLOAD_KEYSTORE_BASE64: ${{ secrets.MBTI_KEYSTORE_BASE64 }}
+          # 입력값은 env 로 받는다. run 안에 ${{ }} 를 직접 쓰면 값에 따라
+          # 셸 명령이 망가질 수 있고, 두 가지 컨텍스트 중 어느 쪽이 채워지는지도
+          # 깃허브 설정에 따라 갈린다 — 둘 다 받아 둔다.
+          GEN_KEYSTORE: ${{ inputs.generate_keystore || github.event.inputs.generate_keystore }}
         run: |
           mkdir -p ~/.mbti
+          echo "generate_keystore 로 받은 값: '$GEN_KEYSTORE'"
           if [ -n "$UPLOAD_KEYSTORE_BASE64" ]; then
             echo "$UPLOAD_KEYSTORE_BASE64" | base64 -d > "$MBTI_KEYSTORE_PATH"
             echo "Secret 에서 업로드 키 복원 완료"
             echo "created=false" >> "$GITHUB_OUTPUT"
-          elif [ "${{ inputs.generate_keystore }}" != "true" ]; then
+          elif [ "$GEN_KEYSTORE" != "true" ]; then
             # 키도 없고 만들라고 하지도 않았다 → 여기서 멈춘다.
             # 그냥 만들어버리면 공개 저장소에서 키가 노출될 수 있다.
             echo "::error::업로드 키가 없습니다 (Secret MBTI_KEYSTORE_BASE64 없음)."
