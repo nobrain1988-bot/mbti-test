@@ -1,0 +1,49 @@
+
+<!doctype html><html><head><meta charset="utf-8"><style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:1024px; height:1024px; overflow:hidden;
+         background:linear-gradient(158deg, #e7e9f7 0%, #c6cae6 100%);
+         display:flex; align-items:center; justify-content:center;
+         font-family:'Pretendard Variable', -apple-system, 'Segoe UI', 'Malgun Gothic', Arial, sans-serif; }
+
+  /* 1024 기준으로 그리고, 다른 크기는 통째로 확대/축소한다 */
+  .mark { width:1024px; height:1024px; position:relative; transform-origin:center;
+          display:flex; flex-direction:column; align-items:center; justify-content:center; gap:38px; }
+
+  .head { position:relative; width:392px; height:372px; }
+  .face { position:absolute; inset:0; border-radius:166px; background:#f6ddc4;
+          box-shadow:0 26px 54px -22px rgba(36,37,64,.42); }
+  /* 머리 — 얼굴 위를 덮는 모자 모양 */
+  .hair { position:absolute; left:0; top:-26px; width:392px; height:196px;
+          border-radius:180px 180px 54px 54px; z-index:2;
+          background:linear-gradient(162deg, #4a4f85, #3a3f72); }
+
+  .eye { position:absolute; top:206px; width:38px; height:46px; border-radius:50%;
+         background:#242540; }
+  .eye.left { left:118px; } .eye.right { right:118px; }
+
+  .cheek { position:absolute; top:258px; width:52px; height:30px; border-radius:50%;
+           background:#e9a8a0; opacity:.45; }
+  .cheek.left { left:40px; } .cheek.right { right:40px; }
+
+  .mouth { position:absolute; top:256px; left:50%; margin-left:-30px; width:60px; height:30px; }
+
+  .word { font-size:150px; font-weight:800; letter-spacing:.06em;
+          color:#3a3f72; line-height:1; }
+</style></head><body>
+  <div class="mark" style="transform: scale(1.2)">
+    <div class="head">
+      <div class="hair"></div>
+      <div class="face">
+        <span class="eye left"></span>
+        <span class="eye right"></span>
+        <span class="cheek left"></span>
+        <span class="cheek right"></span>
+        <svg class="mouth" viewBox="0 0 60 30">
+          <path d="M6 6 Q30 28 54 6" fill="none" stroke="#242540"
+                stroke-width="7" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="word">MBTI</div>
+  </div></body></html>

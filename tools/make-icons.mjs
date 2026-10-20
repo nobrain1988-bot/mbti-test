@@ -1,24 +1,25 @@
 // 앱 아이콘 · 스플래시 원본 생성기  (npm run icons)
 //
-// 왜 스크립트인가: 아이콘을 손으로 그려 PNG 로 갖고 있으면, 색을 한 번 바꿀 때마다
-// 다시 그려야 하고 '무슨 색이었는지'가 파일 안에 갇힌다. 여기서는 앱과 같은 색 상수를
-// 쓰고 도형을 계산해서 그린다 → 색·모양을 바꾸려면 이 파일만 고치면 된다.
-// (타로 앱의 tools/make-icons.mjs 와 같은 방식, 문양만 이 앱에 맞게 새로 그렸다)
+// 왜 브라우저로 그리는가: 예전엔 sharp 로 도형을 계산해서 그렸는데, 글자(MBTI)를
+// 넣으려니 글꼴을 못 찾아 네모로 깨졌다. 크롬으로 HTML 을 찍으면 글꼴·그라데이션·
+// 둥근 모서리가 전부 제대로 나온다. (tools/feature-graphic.mjs 와 같은 방식)
 //
-// 문양: 2x2 사각형 4개 = 이 검사의 4가지 축(E/I·S/N·T/F·J/P)을 상징한다.
+// 문양: 앱 시작화면의 캐릭터와 같은 결의 얼굴 + MBTI 글자.
+// 작게 줄여도 얼굴이 먼저 읽히고, 스토어처럼 크게 보이는 자리에서는 글자까지 읽힌다.
 //
-// 만드는 것 (assets/):
-//   icon.png             1024  일반 아이콘 (배경+문양)
-//   icon-foreground.png  1024  적응형 아이콘 앞면 (문양만, 여백 넉넉히)
-//   icon-background.png  1024  적응형 아이콘 뒷면 (배경만)
-//   splash.png           2732  실행 화면 (앱과 같은 종이톤 배경)
-//   splash-dark.png      2732  실행 화면 (다크) — 이 앱은 라이트 전용이라 동일하게 둔다
-//
-// 이 파일들을 @capacitor/assets 가 읽어서 안드로이드의 수십 가지 크기로 뽑아준다.
-// (안드로이드 프로젝트 생성 전까지는 assets/ 원본과 public/ PWA 아이콘까지만 의미가 있다)
+// 만드는 것:
+//   assets/icon.png             1024  일반 아이콘
+//   assets/icon-foreground.png  1024  적응형 앞면 (배경 투명, 잘림 안전지대 안에)
+//   assets/icon-background.png  1024  적응형 뒷면
+//   assets/splash.png           2732  실행 화면
+//   assets/splash-dark.png      2732  실행 화면(다크) — 라이트 전용 앱이라 동일
+//   public/pwa-*.png                  홈 화면에 추가용
+//   store/icon-512.png          512   플레이 콘솔 '앱 아이콘' 칸
 
+import puppeteer from 'puppeteer-core'
 import sharp from 'sharp'
 import { mkdir, writeFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -27,104 +28,137 @@ const OUT = join(ROOT, 'assets')
 const PUB = join(ROOT, 'public')
 const STORE = join(ROOT, 'store')
 
-// 앱과 같은 색 (src/styles.css 의 --accent 계열과 일치시킬 것)
+// 앱과 같은 색 (src/styles.css 의 --accent 계열)
 const C = {
-  bgDeep: '#0f1115',
-  bgLift: '#1c1e33',   // 아이콘 배경의 은은한 인디고 광원
-  paper: '#f6f6f4',    // 앱 배경과 같은 종이톤 — 실행화면에 쓴다
-  inkHi: '#8f93c4',
-  inkMid: '#6b6fa8',
-  inkLo: '#3a3f72',
-  inkDeep: '#242540',
+  bgTop: '#e7e9f7',
+  bgBottom: '#c6cae6',
+  hair: '#3a3f72',
+  hairLit: '#4a4f85',
+  skin: '#f6ddc4',
+  ink: '#242540',
+  text: '#3a3f72',
+  blush: '#e9a8a0',
+  paper: '#f6f6f4',
 }
 
-const defs = `
-  <radialGradient id="bg" cx="50%" cy="42%" r="72%">
-    <stop offset="0%"   stop-color="${C.bgLift}"/>
-    <stop offset="100%" stop-color="${C.bgDeep}"/>
-  </radialGradient>`
+const CHROME = [
+  'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  `${process.env.LOCALAPPDATA}/Google/Chrome/Application/chrome.exe`,
+  'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+  'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
+].find((p) => p && existsSync(p))
+if (!CHROME) { console.error('크롬을 못 찾았습니다.'); process.exit(1) }
 
-// 문양: 2x2 사각형. 좌상단→우하단으로 밝→어두운 인디고 그라데이션이 흐르게
-// 하나의 그라데이션을 네 사각형이 같이 나눠 쓴다(각자 다른 색을 넣는 것보다
-// 한 덩어리로 읽힌다). colors 는 어두운 배경/밝은 배경에 따라 바꿔 넣는다.
-function mark(size, scale = 1, colors = [C.inkHi, C.inkMid, C.inkLo]) {
-  const box = size * 0.6 * scale
-  const gap = size * 0.05 * scale
-  const sq = (box - gap) / 2
-  const r = sq * 0.26
-  const left = (size - box) / 2
-  const top = (size - box) / 2
+// 문양(얼굴 + 글자). scale 로 전체 크기를 줄여 적응형 아이콘 안전지대에 맞춘다.
+const markHtml = (scale) => `
+  <div class="mark" style="transform: scale(${scale})">
+    <div class="head">
+      <div class="hair"></div>
+      <div class="face">
+        <span class="eye left"></span>
+        <span class="eye right"></span>
+        <span class="cheek left"></span>
+        <span class="cheek right"></span>
+        <svg class="mouth" viewBox="0 0 60 30">
+          <path d="M6 6 Q30 28 54 6" fill="none" stroke="${C.ink}"
+                stroke-width="7" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="word">MBTI</div>
+  </div>`
 
-  const grad = `
-    <linearGradient id="accent" x1="${left}" y1="${top}" x2="${left + box}" y2="${top + box}"
-                    gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="${colors[0]}"/>
-      <stop offset="55%"  stop-color="${colors[1]}"/>
-      <stop offset="100%" stop-color="${colors[2]}"/>
-    </linearGradient>`
+const page = (size, { bg = true, mark = true, scale = 1 }) => `
+<!doctype html><html><head><meta charset="utf-8"><style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:${size}px; height:${size}px; overflow:hidden;
+         background:${bg ? `linear-gradient(158deg, ${C.bgTop} 0%, ${C.bgBottom} 100%)` : 'transparent'};
+         display:flex; align-items:center; justify-content:center;
+         font-family:'Pretendard Variable', -apple-system, 'Segoe UI', 'Malgun Gothic', Arial, sans-serif; }
 
-  const at = (col, row) => ({ x: left + col * (sq + gap), y: top + row * (sq + gap) })
-  const positions = [at(0, 0), at(1, 0), at(0, 1), at(1, 1)]
-  const rects = positions
-    .map((p) => `<rect x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}" width="${sq.toFixed(2)}" height="${sq.toFixed(2)}" rx="${r.toFixed(2)}" fill="url(#accent)"/>`)
-    .join('\n    ')
+  /* 1024 기준으로 그리고, 다른 크기는 통째로 확대/축소한다 */
+  .mark { width:1024px; height:1024px; position:relative; transform-origin:center;
+          display:flex; flex-direction:column; align-items:center; justify-content:center; gap:38px; }
 
-  return grad + '\n    ' + rects
+  .head { position:relative; width:392px; height:372px; }
+  .face { position:absolute; inset:0; border-radius:166px; background:${C.skin};
+          box-shadow:0 26px 54px -22px rgba(36,37,64,.42); }
+  /* 머리 — 얼굴 위를 덮는 모자 모양 */
+  .hair { position:absolute; left:0; top:-26px; width:392px; height:196px;
+          border-radius:180px 180px 54px 54px; z-index:2;
+          background:linear-gradient(162deg, ${C.hairLit}, ${C.hair}); }
+
+  .eye { position:absolute; top:206px; width:38px; height:46px; border-radius:50%;
+         background:${C.ink}; }
+  .eye.left { left:118px; } .eye.right { right:118px; }
+
+  .cheek { position:absolute; top:258px; width:52px; height:30px; border-radius:50%;
+           background:${C.blush}; opacity:.45; }
+  .cheek.left { left:40px; } .cheek.right { right:40px; }
+
+  .mouth { position:absolute; top:256px; left:50%; margin-left:-30px; width:60px; height:30px; }
+
+  .word { font-size:150px; font-weight:800; letter-spacing:.06em;
+          color:${C.text}; line-height:1; }
+</style></head><body>${mark ? markHtml(scale) : ''}</body></html>`
+
+const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new', args: ['--hide-scrollbars'] })
+const shot = async (file, size, opts) => {
+  const p = await browser.newPage()
+  await p.setViewport({ width: size, height: size, deviceScaleFactor: 1 })
+  await p.setContent(page(size, opts), { waitUntil: 'networkidle0' })
+  await p.evaluate(() => document.fonts.ready)
+  await p.screenshot({ path: file, omitBackground: opts.bg === false })
+  await p.close()
+  console.log('  ✓', file.replace(ROOT, '').replace(/^[\/]/, ''))
 }
 
-const svgIcon = (size) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <defs>${defs}</defs>
-  <rect width="${size}" height="${size}" fill="url(#bg)"/>
-  ${mark(size, 1)}
-</svg>`
+try {
+  await mkdir(OUT, { recursive: true })
+  await mkdir(PUB, { recursive: true })
+  await mkdir(STORE, { recursive: true })
 
-// 적응형 아이콘 앞면: 시스템이 원형·둥근네모로 잘라내므로 가운데 안전지대 안에만 그린다.
-const svgForeground = (size) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  ${mark(size, 0.62)}
-</svg>`
+  await shot(join(OUT, 'icon.png'), 1024, { scale: 1.2 })
+  // 적응형 앞면: 런처가 바깥을 잘라내므로 더 작게 그린다
+  await shot(join(OUT, 'icon-foreground.png'), 1024, { bg: false, scale: 0.86 })
+  await shot(join(OUT, 'icon-background.png'), 1024, { mark: false })
 
-const svgBackground = (size) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <defs>${defs}</defs>
-  <rect width="${size}" height="${size}" fill="url(#bg)"/>
-</svg>`
+  // 실행화면 — 앱 배경과 같은 종이톤. 아이콘만 작게.
+  const splash = join(OUT, 'splash.png')
+  const p = await browser.newPage()
+  await p.setViewport({ width: 2732, height: 2732 })
+  await p.setContent(
+    page(2732, { scale: 0.5 }).replace(
+      /background:linear-gradient\(158deg[^;]+;/,
+      `background:${C.paper};`,
+    ),
+    { waitUntil: 'networkidle0' },
+  )
+  await p.evaluate(() => document.fonts.ready)
+  await p.screenshot({ path: splash })
+  await p.close()
+  console.log('  ✓ assets/splash.png')
+  await sharp(splash).toFile(join(OUT, 'splash-dark.png'))
+  console.log('  ✓ assets/splash-dark.png')
 
-// 실행화면은 앱 배경과 같은 종이톤으로 간다. 앱 자체가 흰 배경인데 실행화면만
-// 검으면 앱을 열 때마다 검은 화면이 번쩍하고 흰 화면으로 넘어간다.
-const svgSplash = (size) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <rect width="${size}" height="${size}" fill="${C.paper}"/>
-  ${mark(size, 0.34, [C.inkMid, C.inkLo, C.inkDeep])}
-</svg>`
+  // 마스커블(홈 화면에 추가) 은 런처가 원형 등으로 잘라내므로 더 작게 그린다
+  await shot(join(PUB, 'pwa-maskable-512.png'), 512, { scale: 0.88 })
 
-// 마스커블 아이콘: 안드로이드가 원형·둥근네모 등으로 잘라낸다.
-const svgMaskable = (size) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <defs>${defs}</defs>
-  <rect width="${size}" height="${size}" fill="url(#bg)"/>
-  ${mark(size, 0.66)}
-</svg>`
+  // 나머지 크기는 1024 원본을 줄여 쓴다
+  const base = join(OUT, 'icon.png')
+  for (const [file, size, dir] of [
+    ['pwa-192.png', 192, PUB], ['pwa-512.png', 512, PUB], ['icon-512.png', 512, STORE],
+  ]) {
+    await sharp(base).resize(size, size).png().toFile(join(dir, file))
+    console.log('  ✓', (dir === PUB ? 'public/' : 'store/') + file)
+  }
 
-const png = (svg, file, dir = OUT) =>
-  sharp(Buffer.from(svg)).png().toFile(join(dir, file)).then(() => console.log('  ✓', file))
+  await writeFile(join(OUT, 'icon.html'), page(1024, { scale: 1.2 }), 'utf8')
+  console.log('  ✓ assets/icon.html (원본 — 브라우저로 열어 확인 가능)')
+} finally {
+  await browser.close()
+}
 
-await mkdir(OUT, { recursive: true })
-await mkdir(PUB, { recursive: true })
-await Promise.all([
-  png(svgIcon(1024), 'icon.png'),
-  png(svgForeground(1024), 'icon-foreground.png'),
-  png(svgBackground(1024), 'icon-background.png'),
-  png(svgSplash(2732), 'splash.png'),
-  png(svgSplash(2732), 'splash-dark.png'),
-
-  // 홈 화면에 추가(PWA)용 — 폰 브라우저에서 앱처럼 띄울 때 쓴다.
-  png(svgIcon(192), 'pwa-192.png', PUB),
-  png(svgIcon(512), 'pwa-512.png', PUB),
-  png(svgMaskable(512), 'pwa-maskable-512.png', PUB),
-
-  // 플레이 콘솔 '앱 아이콘' 칸에 올릴 512×512 (store/ 에 스토어 자료를 모아 둔다)
-  mkdir(STORE, { recursive: true }).then(() => png(svgIcon(512), 'icon-512.png', STORE)),
-])
-
-// 원본 SVG 도 남긴다. 스토어 그래픽·홍보물에서 확대해 써야 할 때 필요하다.
-await writeFile(join(OUT, 'icon.svg'), svgIcon(1024), 'utf8')
-console.log('  ✓ icon.svg (벡터 원본)')
-console.log('\nassets/ · public/ 생성 완료 — 안드로이드 프로젝트를 만든 뒤(npx cap add android)')
-console.log('npx @capacitor/assets generate --android 를 실행하면 런처 아이콘까지 자동 반영된다.')
+console.log('\n생성 완료. 안드로이드 런처 아이콘까지 반영하려면')
+console.log('npx @capacitor/assets generate --android 가 이어서 돌아야 한다.')
