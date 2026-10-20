@@ -38,8 +38,8 @@ const TEST_IDS = {
 // MBTI(com.obok.mbti) 용. 애드몹 콘솔에서 이 앱을 새로 등록하고 발급받아 채운다.
 // 비어 있는 동안은 출시본이어도 테스트 광고가 나간다 = 수익 0원.
 const REAL_IDS = {
-  banner:       '',
-  interstitial: '',
+  banner:       'ca-app-pub-9311950226943560/2466365240',
+  interstitial: 'ca-app-pub-9311950226943560/2995269273',
   reward:       '',
 }
 

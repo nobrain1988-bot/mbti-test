@@ -9,12 +9,10 @@
         android:theme="@style/AppTheme">
         <!-- 애드몹 '앱 ID'. 광고 단위 ID(src/lib/ads.js)와는 완전히 다른 값이고,
              앱 ID 는 테스트/실제를 빌드로 나누지 않는다 — 여기 적힌 하나를 쓴다.
-             ⚠️ 지금은 구글 공식 '테스트 앱 ID' 다. 애드몹에서 com.obok.mbti 를 등록한 뒤
-             발급받은 실제 값(ca-app-pub-9311950226943560~...)으로 반드시 바꿔야 한다.
-             값이 틀리거나 비면 앱이 켜지자마자 죽는다. -->
+             2026-10-20 실제 값으로 교체 완료. 값이 틀리거나 비면 앱이 켜지자마자 죽는다. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"
+            android:value="ca-app-pub-9311950226943560~4700812192"
         />
 
         <activity
