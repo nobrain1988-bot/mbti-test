@@ -27,6 +27,10 @@ on:
         description: '업로드 키를 새로 만든다 (최초 1회, 반드시 비공개 저장소에서)'
         type: boolean
         default: false
+      export_keystore:
+        description: '업로드 키를 백업용으로 한 번 더 내려받는다 (비공개 저장소에서만)'
+        type: boolean
+        default: false
 
 jobs:
   build-aab:
@@ -150,13 +154,23 @@ jobs:
           path: android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
 
-      - name: 업로드 키 백업 (새로 만든 경우에만)
-        if: steps.keystore.outputs.created == 'true'
+      # 공개 저장소에서 키를 아티팩트로 올리면 누구나 내려받을 수 있다.
+      # 사람이 실수로 켜도 여기서 막는다.
+      - name: 내보내기 안전장치 — 공개 저장소면 중단
+        if: inputs.export_keystore && github.event.repository.private != true
+        run: |
+          echo "::error::공개 저장소에서는 업로드 키를 내보낼 수 없습니다."
+          echo "저장소를 잠시 비공개로 돌린 뒤 다시 실행하세요."
+          exit 1
+
+      - name: 업로드 키 백업 (새로 만들었거나, 백업용으로 요청한 경우)
+        if: steps.keystore.outputs.created == 'true' || inputs.export_keystore
         uses: actions/upload-artifact@v5
         with:
           name: mbti-upload-keystore-DO-NOT-LOSE
           path: /home/runner/.mbti/upload-keystore.jks
           if-no-files-found: error
-          # 서명키가 깃허브에 오래 남아 있을 이유가 없다. 하루 안에 내려받고,
-          # 내려받았으면 실행 기록째로 지운다. (기본값 90일은 너무 길다)
-          retention-days: 1
+          # 서명키가 깃허브에 오래 남아 있을 이유가 없다. 받았으면 실행 기록째로 지운다.
+          # 다만 1일로 뒀더니 그날 못 받고 놓쳐서 백업본이 사라진 적이 있다.
+          # 7일이면 주말을 끼고도 받을 수 있으면서 기본값 90일보다는 훨씬 짧다.
+          retention-days: 7
