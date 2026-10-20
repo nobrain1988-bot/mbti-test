@@ -38,7 +38,7 @@ const BG = `
   linear-gradient(150deg,#3a3572 0%,#221d4b 52%,#13112b 100%)`
 
 // mark: 계기판 지름(px), word: 글자 크기(px). 둘 다 1024 기준.
-const html = ({ size = 1024, mark = 404, word = 156, sub = 56, bg = true, showWord = true }) => `
+const html = ({ size = 1024, mark = 492, word = 192, sub = 68, bg = true, showWord = true }) => `
 <!doctype html><html><head><meta charset="utf-8"><style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{width:${size}px;height:${size}px;overflow:hidden;position:relative;
@@ -48,7 +48,7 @@ body{width:${size}px;height:${size}px;overflow:hidden;position:relative;
 .sheen{position:absolute;inset:0;pointer-events:none;background:
   radial-gradient(90% 65% at 28% 8%, rgba(255,255,255,.22), rgba(255,255,255,0) 58%),
   radial-gradient(120% 90% at 50% 112%, rgba(0,0,0,.44), rgba(0,0,0,0) 62%)}
-.w{position:relative;display:flex;flex-direction:column;align-items:center;gap:18px;
+.w{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;
    transform:scale(${size / 1024});transform-origin:center}
 .glow{position:absolute;width:${mark * 1.35}px;height:${mark * 1.35}px;border-radius:50%;
   top:${-mark * 0.17}px;
@@ -109,13 +109,13 @@ try {
 
   await shot(join(OUT, 'icon.png'), 1024)
   // 적응형 앞면 — 런처가 바깥을 잘라내므로 작게 그린다
-  await shot(join(OUT, 'icon-foreground.png'), 1024, { bg: false, mark: 320, word: 124, sub: 45 })
+  await shot(join(OUT, 'icon-foreground.png'), 1024, { bg: false, mark: 388, word: 152, sub: 54 })
   await shot(join(OUT, 'icon-background.png'), 1024, { mark: 0, showWord: false })
   // 마스커블도 잘림을 감안해 여유를 둔다
-  await shot(join(PUB, 'pwa-maskable-512.png'), 512, { mark: 336, word: 130, sub: 47 })
+  await shot(join(PUB, 'pwa-maskable-512.png'), 512, { mark: 408, word: 160, sub: 57 })
 
   // 실행화면 — 아이콘과 같은 배경에 문양만 작게
-  await shot(join(OUT, 'splash.png'), 2732, { mark: 266, word: 104, sub: 38 })
+  await shot(join(OUT, 'splash.png'), 2732, { mark: 320, word: 126, sub: 45 })
   await sharp(join(OUT, 'splash.png')).toFile(join(OUT, 'splash-dark.png'))
   console.log('  ✓ assets/splash-dark.png')
 
