@@ -1,51 +1,26 @@
 // 앱 아이콘 · 스플래시 원본 생성기  (npm run icons)
 //
-// 왜 브라우저로 그리는가: 예전엔 sharp 로 도형을 계산해서 그렸는데, 글자(MBTI)를
-// 넣으려니 글꼴을 못 찾아 네모로 깨졌다. 크롬으로 HTML 을 찍으면 글꼴·그라데이션·
-// 둥근 모서리가 전부 제대로 나온다. (tools/feature-graphic.mjs 와 같은 방식)
+// 왜 브라우저로 그리는가: 예전엔 sharp 로 도형을 계산해 그렸는데 글꼴을 못 찾아
+// 글자가 깨졌고, 그라데이션·발광 같은 효과도 표현이 안 됐다. 크롬으로 HTML 을
+// 찍으면 전부 의도대로 나온다. (tools/feature-graphic.mjs 와 같은 방식)
 //
-// 문양: 앱 시작화면의 캐릭터와 같은 결의 얼굴 + MBTI 글자.
-// 작게 줄여도 얼굴이 먼저 읽히고, 스토어처럼 크게 보이는 자리에서는 글자까지 읽힌다.
-//
-// 만드는 것:
-//   assets/icon.png             1024  일반 아이콘
-//   assets/icon-foreground.png  1024  적응형 앞면 (배경 투명, 잘림 안전지대 안에)
-//   assets/icon-background.png  1024  적응형 뒷면
-//   assets/splash.png           2732  실행 화면
-//   assets/splash-dark.png      2732  실행 화면(다크) — 라이트 전용 앱이라 동일
-//   public/pwa-*.png                  홈 화면에 추가용
-//   store/icon-512.png          512   플레이 콘솔 '앱 아이콘' 칸
+// 문양: 4가지 축을 뜻하는 계기판 + MBTI 글자.
+//   · 캐릭터 얼굴도 시도했지만 "애들 장난 같다"는 피드백을 받고 뺐다.
+//     캐릭터는 시작 화면에 남아 있고, 아이콘은 '정밀 검사' 톤으로 간다.
+//   · 금색은 포인트다. 같은 남색 계열만 쓰면 단조로워서 고급스러움이 안 산다.
+//   · 한글 부제('성격유형 검사')도 넣어 봤지만 48px 에서 뭉개져서 뺐다.
 
 import puppeteer from 'puppeteer-core'
 import sharp from 'sharp'
-import { mkdir, writeFile, readFile } from 'node:fs/promises'
+import { mkdir, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { dirname, join, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const OUT = join(ROOT, 'assets')
 const PUB = join(ROOT, 'public')
 const STORE = join(ROOT, 'store')
-
-// 앱과 같은 색 (src/styles.css 의 --accent 계열)
-const C = {
-  bgTop: '#e7e9f7',
-  bgBottom: '#c6cae6',
-  hair: '#3a3f72',
-  hairLit: '#4a4f85',
-  skin: '#f6ddc4',
-  ink: '#242540',
-  text: '#3a3f72',
-  blush: '#e9a8a0',
-  paper: '#f6f6f4',
-  cream: '#f6f3ea',   // icon-face.png 의 배경색과 정확히 같아야 한다
-}
-
-// 시작화면 캐릭터(3D 렌더 원본)에서 머리만 잘라 둔 것. tools 로 직접 그리지 않고
-// 진짜 캐릭터를 쓴다 — CSS 로 흉내 내면 원본보다 초라해진다.
-const FACE = 'data:image/png;base64,' +
-  (await readFile(join(OUT, 'icon-face.png'))).toString('base64')
 
 const CHROME = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -56,41 +31,70 @@ const CHROME = [
 ].find((p) => p && existsSync(p))
 if (!CHROME) { console.error('크롬을 못 찾았습니다.'); process.exit(1) }
 
-// 문양(얼굴 + 글자). scale 로 전체 크기를 줄여 적응형 아이콘 안전지대에 맞춘다.
-const markHtml = (scale) => `
-  <div class="mark" style="transform: scale(${scale})">
-    <img class="face" src="${FACE}" alt="">
-    <div class="word">MBTI</div>
-  </div>`
+const BG = `
+  radial-gradient(72% 58% at 30% 10%, #5f57a6 0%, rgba(95,87,166,0) 60%),
+  linear-gradient(150deg,#3a3572 0%,#221d4b 52%,#13112b 100%)`
 
-const page = (size, { bg = true, mark = true, scale = 1 }) => `
+// mark: 계기판 지름(px), word: 글자 크기(px). 둘 다 1024 기준.
+const html = ({ size = 1024, mark = 470, word = 178, bg = true, showWord = true }) => `
 <!doctype html><html><head><meta charset="utf-8"><style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { width:${size}px; height:${size}px; overflow:hidden;
-         background:${bg ? C.cream : 'transparent'};
-         display:flex; align-items:center; justify-content:center;
-         font-family:'Pretendard Variable', -apple-system, 'Segoe UI', 'Malgun Gothic', Arial, sans-serif; }
-
-  /* 1024 기준으로 그리고 다른 크기는 통째로 확대/축소한다 */
-  .mark { width:1024px; height:1024px; transform-origin:center;
-          display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
-
-  /* 얼굴은 배경째로 잘라온 이미지다. 아이콘 배경색을 같게 맞춰서 경계가 안 보인다. */
-  .face { width:540px; height:540px; display:block; }
-
-  .word { font-size:140px; font-weight:800; letter-spacing:.07em;
-          color:${C.text}; line-height:1; margin-top:0; }
-</style></head><body>${mark ? markHtml(scale) : ''}</body></html>`
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:${size}px;height:${size}px;overflow:hidden;position:relative;
+ display:flex;align-items:center;justify-content:center;
+ font-family:'Pretendard Variable',-apple-system,'Segoe UI',Arial,sans-serif;
+ background:${bg ? BG : 'transparent'}}
+.sheen{position:absolute;inset:0;pointer-events:none;background:
+  radial-gradient(90% 65% at 28% 8%, rgba(255,255,255,.22), rgba(255,255,255,0) 58%),
+  radial-gradient(120% 90% at 50% 112%, rgba(0,0,0,.44), rgba(0,0,0,0) 62%)}
+.w{position:relative;display:flex;flex-direction:column;align-items:center;gap:18px;
+   transform:scale(${size / 1024});transform-origin:center}
+.glow{position:absolute;width:${mark * 1.35}px;height:${mark * 1.35}px;border-radius:50%;
+  top:${-mark * 0.17}px;
+  background:radial-gradient(closest-side, rgba(168,156,255,.38), rgba(168,156,255,0) 70%);
+  filter:blur(14px)}
+svg{position:relative;filter:drop-shadow(0 0 30px rgba(176,164,255,.45))}
+.t{position:relative;font-size:${word}px;font-weight:800;letter-spacing:-.01em;line-height:1;
+  background:linear-gradient(176deg,#ffffff 6%,#e6e0ff 48%,#bcb2ea 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 8px 22px rgba(10,6,36,.55)) drop-shadow(0 0 36px rgba(173,160,255,.35))}
+</style></head><body>
+<div class="w">
+  <div class="glow"></div>
+  <svg viewBox="0 0 300 300" width="${mark}" height="${mark}">
+    <defs>
+      <linearGradient id="ln" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#ffffff"/><stop offset="55%" stop-color="#ded6ff"/>
+        <stop offset="100%" stop-color="#a99ae4"/></linearGradient>
+      <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#f6ddaa"/><stop offset="50%" stop-color="#e0b471"/>
+        <stop offset="100%" stop-color="#b98f46"/></linearGradient>
+    </defs>
+    <circle cx="150" cy="150" r="128" fill="none" stroke="url(#gold)" stroke-width="7"/>
+    <g stroke="url(#ln)" stroke-width="10" stroke-linecap="round">
+      <line x1="150" y1="46" x2="150" y2="254"/><line x1="46" y1="150" x2="254" y2="150"/>
+      <line x1="76" y1="76" x2="224" y2="224"/><line x1="224" y1="76" x2="76" y2="224"/>
+    </g>
+    <g fill="url(#ln)">
+      <circle cx="150" cy="46" r="21"/><circle cx="150" cy="254" r="21"/>
+      <circle cx="46" cy="150" r="21"/><circle cx="254" cy="150" r="21"/>
+      <circle cx="76" cy="76" r="14"/><circle cx="224" cy="224" r="14"/>
+      <circle cx="224" cy="76" r="14"/><circle cx="76" cy="224" r="14"/>
+    </g>
+    <circle cx="150" cy="150" r="36" fill="url(#gold)"/>
+  </svg>
+  ${showWord ? '<div class="t">MBTI</div>' : ''}
+</div>
+${bg ? '<div class="sheen"></div>' : ''}</body></html>`
 
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new', args: ['--hide-scrollbars'] })
-const shot = async (file, size, opts) => {
+const shot = async (file, size, opts = {}) => {
   const p = await browser.newPage()
   await p.setViewport({ width: size, height: size, deviceScaleFactor: 1 })
-  await p.setContent(page(size, opts), { waitUntil: 'networkidle0' })
+  await p.setContent(html({ size, ...opts }), { waitUntil: 'networkidle0' })
   await p.evaluate(() => document.fonts.ready)
   await p.screenshot({ path: file, omitBackground: opts.bg === false })
   await p.close()
-  console.log('  ✓', file.replace(ROOT, '').replace(/^[\/]/, ''))
+  console.log('  ✓', file.slice(ROOT.length + 1).split(sep).join('/'))
 }
 
 try {
@@ -98,43 +102,31 @@ try {
   await mkdir(PUB, { recursive: true })
   await mkdir(STORE, { recursive: true })
 
-  await shot(join(OUT, 'icon.png'), 1024, { scale: 1.08 })
-  // 적응형 앞면: 런처가 바깥을 잘라내므로 더 작게 그린다
-  await shot(join(OUT, 'icon-foreground.png'), 1024, { bg: false, scale: 0.8 })
-  await shot(join(OUT, 'icon-background.png'), 1024, { mark: false })
+  await shot(join(OUT, 'icon.png'), 1024)
+  // 적응형 앞면 — 런처가 바깥을 잘라내므로 작게 그린다
+  await shot(join(OUT, 'icon-foreground.png'), 1024, { bg: false, mark: 360, word: 136 })
+  await shot(join(OUT, 'icon-background.png'), 1024, { mark: 0, showWord: false })
+  // 마스커블도 잘림을 감안해 여유를 둔다
+  await shot(join(PUB, 'pwa-maskable-512.png'), 512, { mark: 380, word: 142 })
 
-  // 실행화면 — 앱 배경과 같은 종이톤. 아이콘만 작게.
-  const splash = join(OUT, 'splash.png')
-  const p = await browser.newPage()
-  await p.setViewport({ width: 2732, height: 2732 })
-  await p.setContent(
-    page(2732, { scale: 0.5 }),
-    { waitUntil: 'networkidle0' },
-  )
-  await p.evaluate(() => document.fonts.ready)
-  await p.screenshot({ path: splash })
-  await p.close()
-  console.log('  ✓ assets/splash.png')
-  await sharp(splash).toFile(join(OUT, 'splash-dark.png'))
+  // 실행화면 — 아이콘과 같은 배경에 문양만 작게
+  await shot(join(OUT, 'splash.png'), 2732, { mark: 300, word: 112 })
+  await sharp(join(OUT, 'splash.png')).toFile(join(OUT, 'splash-dark.png'))
   console.log('  ✓ assets/splash-dark.png')
 
-  // 마스커블(홈 화면에 추가) 은 런처가 원형 등으로 잘라내므로 더 작게 그린다
-  await shot(join(PUB, 'pwa-maskable-512.png'), 512, { scale: 0.88 })
-
-  // 나머지 크기는 1024 원본을 줄여 쓴다
   const base = join(OUT, 'icon.png')
-  for (const [file, size, dir] of [
-    ['pwa-192.png', 192, PUB], ['pwa-512.png', 512, PUB], ['icon-512.png', 512, STORE],
+  for (const [file, size, dir, label] of [
+    ['pwa-192.png', 192, PUB, 'public/'], ['pwa-512.png', 512, PUB, 'public/'],
+    ['icon-512.png', 512, STORE, 'store/'],
   ]) {
     await sharp(base).resize(size, size).png().toFile(join(dir, file))
-    console.log('  ✓', (dir === PUB ? 'public/' : 'store/') + file)
+    console.log('  ✓', label + file)
   }
 
-  await writeFile(join(OUT, 'icon.html'), page(1024, { scale: 1.08 }), 'utf8')
-  console.log('  ✓ assets/icon.html (원본 — 브라우저로 열어 확인 가능)')
+  await writeFile(join(OUT, 'icon.html'), html({}), 'utf8')
+  console.log('  ✓ assets/icon.html (브라우저로 열어 확인 가능)')
 } finally {
   await browser.close()
 }
 
-console.log('\n생성 완료. 안드로이드 런처 아이콘까지 반영하려면')
-console.log('npx @capacitor/assets generate --android 가 이어서 돌아야 한다.')
+console.log('\n생성 완료. 안드로이드 런처 아이콘은 이어서 @capacitor/assets 가 반영한다.')
