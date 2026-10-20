@@ -8,7 +8,9 @@
 //   · 캐릭터 얼굴도 시도했지만 "애들 장난 같다"는 피드백을 받고 뺐다.
 //     캐릭터는 시작 화면에 남아 있고, 아이콘은 '정밀 검사' 톤으로 간다.
 //   · 금색은 포인트다. 같은 남색 계열만 쓰면 단조로워서 고급스러움이 안 산다.
-//   · 한글 부제('성격유형 검사')도 넣어 봤지만 48px 에서 뭉개져서 뺐다.
+//   · 한글 부제('성격유형 검사')는 사장님 요청으로 넣었다. 48px 에서는 뭉개지지만
+//     스토어 목록(512px)과 폰에서 실제로 보는 크기(96px~)에서는 읽히고,
+//     한글이 있어야 무슨 앱인지 한눈에 들어온다.
 
 import puppeteer from 'puppeteer-core'
 import sharp from 'sharp'
@@ -36,7 +38,7 @@ const BG = `
   linear-gradient(150deg,#3a3572 0%,#221d4b 52%,#13112b 100%)`
 
 // mark: 계기판 지름(px), word: 글자 크기(px). 둘 다 1024 기준.
-const html = ({ size = 1024, mark = 470, word = 178, bg = true, showWord = true }) => `
+const html = ({ size = 1024, mark = 404, word = 156, sub = 56, bg = true, showWord = true }) => `
 <!doctype html><html><head><meta charset="utf-8"><style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{width:${size}px;height:${size}px;overflow:hidden;position:relative;
@@ -53,6 +55,9 @@ body{width:${size}px;height:${size}px;overflow:hidden;position:relative;
   background:radial-gradient(closest-side, rgba(168,156,255,.38), rgba(168,156,255,0) 70%);
   filter:blur(14px)}
 svg{position:relative;filter:drop-shadow(0 0 30px rgba(176,164,255,.45))}
+.s{position:relative;font-size:${sub}px;font-weight:700;letter-spacing:.04em;
+  color:#efe9ff;margin-top:${Math.round(sub * 0.18)}px;
+  text-shadow:0 4px 16px rgba(8,5,30,.7), 0 0 26px rgba(173,160,255,.35)}
 .t{position:relative;font-size:${word}px;font-weight:800;letter-spacing:-.01em;line-height:1;
   background:linear-gradient(176deg,#ffffff 6%,#e6e0ff 48%,#bcb2ea 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent;
@@ -82,7 +87,7 @@ svg{position:relative;filter:drop-shadow(0 0 30px rgba(176,164,255,.45))}
     </g>
     <circle cx="150" cy="150" r="36" fill="url(#gold)"/>
   </svg>
-  ${showWord ? '<div class="t">MBTI</div>' : ''}
+  ${showWord ? '<div class="t">MBTI</div><div class="s">성격유형 검사</div>' : ''}
 </div>
 ${bg ? '<div class="sheen"></div>' : ''}</body></html>`
 
@@ -104,13 +109,13 @@ try {
 
   await shot(join(OUT, 'icon.png'), 1024)
   // 적응형 앞면 — 런처가 바깥을 잘라내므로 작게 그린다
-  await shot(join(OUT, 'icon-foreground.png'), 1024, { bg: false, mark: 360, word: 136 })
+  await shot(join(OUT, 'icon-foreground.png'), 1024, { bg: false, mark: 320, word: 124, sub: 45 })
   await shot(join(OUT, 'icon-background.png'), 1024, { mark: 0, showWord: false })
   // 마스커블도 잘림을 감안해 여유를 둔다
-  await shot(join(PUB, 'pwa-maskable-512.png'), 512, { mark: 380, word: 142 })
+  await shot(join(PUB, 'pwa-maskable-512.png'), 512, { mark: 336, word: 130, sub: 47 })
 
   // 실행화면 — 아이콘과 같은 배경에 문양만 작게
-  await shot(join(OUT, 'splash.png'), 2732, { mark: 300, word: 112 })
+  await shot(join(OUT, 'splash.png'), 2732, { mark: 266, word: 104, sub: 38 })
   await sharp(join(OUT, 'splash.png')).toFile(join(OUT, 'splash-dark.png'))
   console.log('  ✓ assets/splash-dark.png')
 
