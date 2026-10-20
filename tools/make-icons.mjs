@@ -18,7 +18,7 @@
 
 import puppeteer from 'puppeteer-core'
 import sharp from 'sharp'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, writeFile, readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -39,7 +39,13 @@ const C = {
   text: '#3a3f72',
   blush: '#e9a8a0',
   paper: '#f6f6f4',
+  cream: '#f6f3ea',   // icon-face.png 의 배경색과 정확히 같아야 한다
 }
+
+// 시작화면 캐릭터(3D 렌더 원본)에서 머리만 잘라 둔 것. tools 로 직접 그리지 않고
+// 진짜 캐릭터를 쓴다 — CSS 로 흉내 내면 원본보다 초라해진다.
+const FACE = 'data:image/png;base64,' +
+  (await readFile(join(OUT, 'icon-face.png'))).toString('base64')
 
 const CHROME = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -53,19 +59,7 @@ if (!CHROME) { console.error('크롬을 못 찾았습니다.'); process.exit(1) 
 // 문양(얼굴 + 글자). scale 로 전체 크기를 줄여 적응형 아이콘 안전지대에 맞춘다.
 const markHtml = (scale) => `
   <div class="mark" style="transform: scale(${scale})">
-    <div class="head">
-      <div class="hair"></div>
-      <div class="face">
-        <span class="eye left"></span>
-        <span class="eye right"></span>
-        <span class="cheek left"></span>
-        <span class="cheek right"></span>
-        <svg class="mouth" viewBox="0 0 60 30">
-          <path d="M6 6 Q30 28 54 6" fill="none" stroke="${C.ink}"
-                stroke-width="7" stroke-linecap="round"/>
-        </svg>
-      </div>
-    </div>
+    <img class="face" src="${FACE}" alt="">
     <div class="word">MBTI</div>
   </div>`
 
@@ -73,34 +67,19 @@ const page = (size, { bg = true, mark = true, scale = 1 }) => `
 <!doctype html><html><head><meta charset="utf-8"><style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { width:${size}px; height:${size}px; overflow:hidden;
-         background:${bg ? `linear-gradient(158deg, ${C.bgTop} 0%, ${C.bgBottom} 100%)` : 'transparent'};
+         background:${bg ? C.cream : 'transparent'};
          display:flex; align-items:center; justify-content:center;
          font-family:'Pretendard Variable', -apple-system, 'Segoe UI', 'Malgun Gothic', Arial, sans-serif; }
 
-  /* 1024 기준으로 그리고, 다른 크기는 통째로 확대/축소한다 */
-  .mark { width:1024px; height:1024px; position:relative; transform-origin:center;
-          display:flex; flex-direction:column; align-items:center; justify-content:center; gap:38px; }
+  /* 1024 기준으로 그리고 다른 크기는 통째로 확대/축소한다 */
+  .mark { width:1024px; height:1024px; transform-origin:center;
+          display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
 
-  .head { position:relative; width:392px; height:372px; }
-  .face { position:absolute; inset:0; border-radius:166px; background:${C.skin};
-          box-shadow:0 26px 54px -22px rgba(36,37,64,.42); }
-  /* 머리 — 얼굴 위를 덮는 모자 모양 */
-  .hair { position:absolute; left:0; top:-26px; width:392px; height:196px;
-          border-radius:180px 180px 54px 54px; z-index:2;
-          background:linear-gradient(162deg, ${C.hairLit}, ${C.hair}); }
+  /* 얼굴은 배경째로 잘라온 이미지다. 아이콘 배경색을 같게 맞춰서 경계가 안 보인다. */
+  .face { width:540px; height:540px; display:block; }
 
-  .eye { position:absolute; top:206px; width:38px; height:46px; border-radius:50%;
-         background:${C.ink}; }
-  .eye.left { left:118px; } .eye.right { right:118px; }
-
-  .cheek { position:absolute; top:258px; width:52px; height:30px; border-radius:50%;
-           background:${C.blush}; opacity:.45; }
-  .cheek.left { left:40px; } .cheek.right { right:40px; }
-
-  .mouth { position:absolute; top:256px; left:50%; margin-left:-30px; width:60px; height:30px; }
-
-  .word { font-size:150px; font-weight:800; letter-spacing:.06em;
-          color:${C.text}; line-height:1; }
+  .word { font-size:140px; font-weight:800; letter-spacing:.07em;
+          color:${C.text}; line-height:1; margin-top:0; }
 </style></head><body>${mark ? markHtml(scale) : ''}</body></html>`
 
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new', args: ['--hide-scrollbars'] })
@@ -119,9 +98,9 @@ try {
   await mkdir(PUB, { recursive: true })
   await mkdir(STORE, { recursive: true })
 
-  await shot(join(OUT, 'icon.png'), 1024, { scale: 1.2 })
+  await shot(join(OUT, 'icon.png'), 1024, { scale: 1.08 })
   // 적응형 앞면: 런처가 바깥을 잘라내므로 더 작게 그린다
-  await shot(join(OUT, 'icon-foreground.png'), 1024, { bg: false, scale: 0.86 })
+  await shot(join(OUT, 'icon-foreground.png'), 1024, { bg: false, scale: 0.8 })
   await shot(join(OUT, 'icon-background.png'), 1024, { mark: false })
 
   // 실행화면 — 앱 배경과 같은 종이톤. 아이콘만 작게.
@@ -129,10 +108,7 @@ try {
   const p = await browser.newPage()
   await p.setViewport({ width: 2732, height: 2732 })
   await p.setContent(
-    page(2732, { scale: 0.5 }).replace(
-      /background:linear-gradient\(158deg[^;]+;/,
-      `background:${C.paper};`,
-    ),
+    page(2732, { scale: 0.5 }),
     { waitUntil: 'networkidle0' },
   )
   await p.evaluate(() => document.fonts.ready)
@@ -154,7 +130,7 @@ try {
     console.log('  ✓', (dir === PUB ? 'public/' : 'store/') + file)
   }
 
-  await writeFile(join(OUT, 'icon.html'), page(1024, { scale: 1.2 }), 'utf8')
+  await writeFile(join(OUT, 'icon.html'), page(1024, { scale: 1.08 }), 'utf8')
   console.log('  ✓ assets/icon.html (원본 — 브라우저로 열어 확인 가능)')
 } finally {
   await browser.close()
